@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Bar chart / stats icon -->
+  <rect x="8" y="36" width="10" height="20" rx="2" fill="#7c3aed" opacity="0.7"/>
+  <rect x="22" y="24" width="10" height="32" rx="2" fill="#4f46e5"/>
+  <rect x="36" y="14" width="10" height="42" rx="2" fill="#4f46e5" opacity="0.5"/>
+  <rect x="50" y="28" width="6" height="28" rx="2" fill="#7c3aed" opacity="0.4"/>
+  <!-- Trend line -->
+  <polyline points="13,34 27,22 41,12 53,26" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle cx="13" cy="34" r="3" fill="#f59e0b"/>
+  <circle cx="27" cy="22" r="3" fill="#f59e0b"/>
+  <circle cx="41" cy="12" r="3" fill="#f59e0b"/>
+  <circle cx="53" cy="26" r="3" fill="#f59e0b"/>
+</svg>

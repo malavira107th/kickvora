@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Trophy icon -->
+  <path d="M20 8 H44 V30 C44 40 36 46 32 46 C28 46 20 40 20 30 Z" fill="#f59e0b" opacity="0.2" stroke="#f59e0b" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- handles -->
+  <path d="M20 14 H10 C10 14 8 24 16 28" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M44 14 H54 C54 14 56 24 48 28" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- stem -->
+  <line x1="32" y1="46" x2="32" y2="54" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- base -->
+  <rect x="22" y="54" width="20" height="4" rx="2" fill="#f59e0b" opacity="0.8"/>
+  <!-- star inside -->
+  <path d="M32 18 L33.5 22.5 L38 22.5 L34.5 25.5 L36 30 L32 27 L28 30 L29.5 25.5 L26 22.5 L30.5 22.5 Z" fill="#f59e0b"/>
+</svg>

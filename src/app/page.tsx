@@ -9,108 +9,178 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Kickvora — Cricket & Basketball Strategy Platform",
   description:
-    "Test your sports knowledge and strategic skills with Kickvora. Build your dream team, compete in free-to-play challenges, and rise to the top of the leaderboards.",
+    "Build your dream team from real players, track live performance, and compete on skill-based leaderboards. Free to play. No luck — just knowledge.",
+  openGraph: {
+    title: "Kickvora — Cricket & Basketball Strategy Platform",
+    description:
+      "Build your dream team from real players, track live performance, and compete on skill-based leaderboards.",
+    images: ["/brand/og-image.webp"],
+  },
 };
 
 const features = [
   {
-    icon: "🏏",
-    title: "Cricket & Basketball",
+    icon: "/icons/icon-skill.svg",
+    title: "Pure Skill. No Luck.",
     description:
-      "Choose from upcoming cricket and basketball matches. Select 11 players for cricket or 5 for basketball and put your knowledge to the test.",
+      "Every point your team earns is based on real player performance. The better your cricket and basketball knowledge, the higher you rank.",
   },
   {
-    icon: "📊",
-    title: "Real Performance Points",
+    icon: "/icons/icon-stats.svg",
+    title: "Live Performance Tracking",
     description:
-      "Your team earns points based on how your selected players actually perform in the real match — runs, wickets, assists, and more.",
+      "Your selected players earn points from actual match stats — runs, wickets, assists, rebounds. Watch your score update in real time.",
   },
   {
-    icon: "🏆",
-    title: "Skill-Based Leaderboards",
+    icon: "/icons/icon-leaderboard.svg",
+    title: "Competitive Leaderboards",
     description:
-      "Compete with fans across the country on our live leaderboards. The better your strategy, the higher you rank.",
+      "Compete with fans on match-by-match leaderboards. Your rank reflects your strategic thinking, not chance.",
   },
   {
-    icon: "🎓",
-    title: "Learn the Game Deeper",
+    icon: "/icons/icon-learn.svg",
+    title: "Learn While You Play",
     description:
-      "Kickvora helps you understand player form, match conditions, and team dynamics in a hands-on, engaging way.",
+      "Kickvora deepens your understanding of player form, match conditions, and team dynamics through hands-on engagement.",
   },
 ];
 
 const steps = [
   {
     number: "01",
-    title: "Create your account",
-    description: "Sign up for free in under a minute. No credit card or payment required.",
+    icon: "/icons/icon-register.svg",
+    title: "Create a free account",
+    description:
+      "Sign up in under a minute. No payment, no subscription — just your email and a password.",
   },
   {
     number: "02",
-    title: "Pick a match",
-    description: "Browse upcoming cricket and basketball matches and choose one to enter.",
+    icon: "/icons/icon-match.svg",
+    title: "Choose a match",
+    description:
+      "Browse upcoming cricket and basketball matches. Pick one you know well and enter before it starts.",
   },
   {
     number: "03",
+    icon: "/icons/icon-team.svg",
     title: "Build your team",
     description:
-      "Select your players using your knowledge of form, conditions, and matchups. Pick a captain for bonus points.",
+      "Select 11 players for cricket or 5 for basketball. Use your knowledge of form, conditions, and matchups.",
   },
   {
     number: "04",
-    title: "Track & compete",
+    icon: "/icons/icon-trophy.svg",
+    title: "Track and compete",
     description:
-      "Watch the match unfold and see your team's score update in real time. Climb the leaderboard.",
+      "Watch the match and see your team's score update live. Climb the leaderboard based on how well your picks perform.",
+  },
+];
+
+const sports = [
+  {
+    name: "Cricket",
+    icon: "/icons/icon-cricket.svg",
+    image: "/images/cricket-section.webp",
+    description:
+      "Select your 11-player cricket squad from real match rosters. Earn points from runs, wickets, catches, and all-round performances.",
+    detail: "Supports T20, ODI, and Test formats",
+    color: "from-red-600/80 to-red-900/90",
+  },
+  {
+    name: "Basketball",
+    icon: "/icons/icon-basketball.svg",
+    image: "/images/basketball-section.webp",
+    description:
+      "Pick your 5-player basketball lineup from real game rosters. Points are earned from points scored, assists, rebounds, and blocks.",
+    detail: "Domestic and international leagues",
+    color: "from-orange-600/80 to-orange-900/90",
+  },
+];
+
+const trustPoints = [
+  {
+    icon: "/icons/icon-free.svg",
+    title: "Completely Free",
+    description: "Kickvora is free to use. There are no charges, subscriptions, or hidden costs of any kind.",
+  },
+  {
+    icon: "/icons/icon-skill.svg",
+    title: "Skill-Based Only",
+    description:
+      "This is a knowledge and strategy platform. Outcomes are determined entirely by real sports performance.",
+  },
+  {
+    icon: "/icons/icon-community.svg",
+    title: "Community Driven",
+    description:
+      "Built for sports fans who want to engage more deeply with the games they already follow and love.",
   },
 ];
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
 
-      {/* Hero */}
-      <section className="relative bg-gradient-to-br from-indigo-700 via-indigo-600 to-purple-600 text-white overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row items-center gap-8 py-16 lg:py-20">
-            {/* Left: text content */}
-            <div className="flex-1 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
-                <span>🏏</span>
-                <span>Cricket &amp; Basketball</span>
-                <span>·</span>
-                <span>100% Free to Play</span>
+      {/* ── HERO ── */}
+      <section className="relative bg-gradient-to-br from-indigo-800 via-indigo-700 to-purple-700 text-white overflow-hidden">
+        {/* subtle grid texture */}
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)",
+            backgroundSize: "32px 32px",
+          }}
+        />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row items-center gap-10 py-20 lg:py-28">
+            {/* Left */}
+            <div className="flex-1 text-center lg:text-left max-w-2xl">
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-sm font-medium mb-8">
+                <Image src="/icons/icon-cricket.svg" alt="Cricket" width={18} height={18} className="opacity-90" />
+                <span>Cricket</span>
+                <span className="text-white/40">·</span>
+                <Image src="/icons/icon-basketball.svg" alt="Basketball" width={18} height={18} className="opacity-90" />
+                <span>Basketball</span>
+                <span className="text-white/40">·</span>
+                <span className="text-green-300 font-semibold">100% Free</span>
               </div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
-                Where Strategy Meets the Spirit of Sport
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.1] tracking-tight mb-6">
+                Where Strategy Meets the
+                <span className="block text-indigo-200"> Spirit of Sport</span>
               </h1>
-              <p className="text-lg sm:text-xl text-white/80 max-w-2xl mb-10">
-                Build your dream team from real players, track their performance in live matches, and
-                compete with fans on skill-based leaderboards. No luck involved — just knowledge.
+
+              <p className="text-lg sm:text-xl text-white/75 leading-relaxed mb-10">
+                Build your team from real players, track their live performance, and compete on
+                skill-based leaderboards. No luck involved — just your knowledge of the game.
               </p>
+
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
                   href="/register"
-                  className="bg-white text-indigo-700 font-semibold px-8 py-3 rounded-xl hover:bg-gray-50 transition-colors text-base"
+                  className="bg-white text-indigo-700 font-bold px-8 py-3.5 rounded-xl hover:bg-indigo-50 transition-colors text-base shadow-lg"
                 >
-                  Create Your Team — Free
+                  Start Playing — Free
                 </Link>
                 <Link
                   href="/how-it-works"
-                  className="border border-white/40 text-white font-semibold px-8 py-3 rounded-xl hover:bg-white/10 transition-colors text-base"
+                  className="border border-white/30 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/10 transition-colors text-base"
                 >
                   How It Works
                 </Link>
               </div>
             </div>
-            {/* Right: hero banner image */}
-            <div className="flex-1 flex justify-center lg:justify-end">
+
+            {/* Right — platform visual */}
+            <div className="flex-1 flex justify-center lg:justify-end w-full">
               <Image
-                src="/brand/hero-banner.webp"
-                alt="Kickvora strategy platform — cricket and basketball player cards"
-                width={640}
-                height={400}
-                className="w-full max-w-lg lg:max-w-xl rounded-2xl object-contain drop-shadow-2xl"
+                src="/images/platform-visual.webp"
+                alt="Kickvora platform — team builder and leaderboard"
+                width={560}
+                height={420}
+                className="w-full max-w-md lg:max-w-lg rounded-2xl shadow-2xl object-contain"
                 priority
               />
             </div>
@@ -118,51 +188,78 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
+      {/* ── SPORTS COVERED ── */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Built for real sports fans
+              Two sports. One platform.
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto">
-              Kickvora rewards deep sports knowledge, not guesswork. Every decision you make is
-              grounded in real player data.
+            <p className="text-gray-500 max-w-xl mx-auto text-base">
+              Kickvora supports cricket and basketball — two of the most strategy-rich sports in the
+              world. Pick the sport you know best, or master both.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((f) => (
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {sports.map((sport) => (
               <div
-                key={f.title}
-                className="bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/30 transition-colors"
+                key={sport.name}
+                className="relative rounded-2xl overflow-hidden group shadow-md hover:shadow-xl transition-shadow"
               >
-                <div className="text-3xl mb-4">{f.icon}</div>
-                <h3 className="font-semibold text-gray-900 mb-2">{f.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{f.description}</p>
+                <Image
+                  src={sport.image}
+                  alt={`${sport.name} on Kickvora`}
+                  width={700}
+                  height={400}
+                  className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                {/* overlay */}
+                <div className={`absolute inset-0 bg-gradient-to-t ${sport.color}`} />
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Image src={sport.icon} alt={sport.name} width={28} height={28} className="brightness-0 invert" />
+                    <h3 className="text-2xl font-bold">{sport.name}</h3>
+                  </div>
+                  <p className="text-white/85 text-sm leading-relaxed mb-2">{sport.description}</p>
+                  <span className="inline-block bg-white/20 text-white text-xs font-medium px-3 py-1 rounded-full">
+                    {sport.detail}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
+      {/* ── HOW IT WORKS ── */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
               How Kickvora works
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto">
-              Four simple steps to get started and start competing.
+            <p className="text-gray-500 max-w-lg mx-auto">
+              Four straightforward steps from sign-up to competing on the leaderboard.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {steps.map((step) => (
-              <div key={step.number} className="text-center">
-                <div className="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg mx-auto mb-4">
-                  {step.number}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative">
+            {/* connector line on desktop */}
+            <div className="hidden lg:block absolute top-10 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-indigo-200 via-purple-200 to-indigo-200" />
+
+            {steps.map((step, i) => (
+              <div key={step.number} className="flex flex-col items-center text-center relative">
+                {/* step circle */}
+                <div className="relative mb-5">
+                  <div className="w-20 h-20 bg-indigo-50 border-2 border-indigo-100 rounded-2xl flex items-center justify-center shadow-sm">
+                    <Image src={step.icon} alt={step.title} width={40} height={40} />
+                  </div>
+                  <span className="absolute -top-2 -right-2 w-6 h-6 bg-indigo-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {i + 1}
+                  </span>
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-2">{step.title}</h3>
+                <h3 className="font-semibold text-gray-900 text-base mb-2">{step.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{step.description}</p>
               </div>
             ))}
@@ -170,20 +267,87 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 px-4 bg-indigo-700 text-white">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to test your skills?</h2>
-          <p className="text-white/80 mb-8 text-lg">
-            Join thousands of sports fans who use Kickvora to engage with cricket and basketball
-            in a smarter, more strategic way.
+      {/* ── FEATURES ── */}
+      <section className="py-20 px-4 bg-gradient-to-br from-indigo-50 to-purple-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              Built for real sports fans
+            </h2>
+            <p className="text-gray-500 max-w-xl mx-auto">
+              Kickvora rewards deep sports knowledge. Every decision you make is grounded in real
+              player data and match context.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((f) => (
+              <div
+                key={f.title}
+                className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all"
+              >
+                <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4">
+                  <Image src={f.icon} alt={f.title} width={28} height={28} />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2 text-base">{f.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{f.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── WHY KICKVORA / TRUST ── */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              A platform you can trust
+            </h2>
+            <p className="text-gray-500 max-w-lg mx-auto">
+              Kickvora is designed to be straightforward, transparent, and accessible to every
+              sports fan.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {trustPoints.map((tp) => (
+              <div key={tp.title} className="flex flex-col items-center text-center px-4">
+                <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-5 shadow-sm">
+                  <Image src={tp.icon} alt={tp.title} width={36} height={36} />
+                </div>
+                <h3 className="font-semibold text-gray-900 text-lg mb-2">{tp.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{tp.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="py-20 px-4 bg-gradient-to-br from-indigo-700 via-indigo-600 to-purple-700 text-white">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            Ready to test your sports knowledge?
+          </h2>
+          <p className="text-white/75 mb-10 text-lg leading-relaxed">
+            Join Kickvora for free. Build your team, follow the match, and see where your strategy
+            takes you on the leaderboard.
           </p>
-          <Link
-            href="/register"
-            className="bg-white text-indigo-700 font-semibold px-8 py-3 rounded-xl hover:bg-gray-100 transition-colors inline-block"
-          >
-            Sign Up for Free
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/register"
+              className="bg-white text-indigo-700 font-bold px-10 py-4 rounded-xl hover:bg-indigo-50 transition-colors text-base shadow-lg"
+            >
+              Create Your Free Account
+            </Link>
+            <Link
+              href="/matches"
+              className="border border-white/30 text-white font-semibold px-10 py-4 rounded-xl hover:bg-white/10 transition-colors text-base"
+            >
+              Browse Matches
+            </Link>
+          </div>
         </div>
       </section>
 

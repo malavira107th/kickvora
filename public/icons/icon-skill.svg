@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Brain / strategy icon -->
+  <path d="M32 8C22 8 14 16 14 26c0 5 2 9.5 5.5 12.5V44h5v6h15v-6h5v-5.5C48 35.5 50 31 50 26c0-10-8-18-18-18z" fill="#4f46e5" opacity="0.12" stroke="#4f46e5" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- neural connections -->
+  <circle cx="32" cy="22" r="3" fill="#4f46e5"/>
+  <circle cx="24" cy="28" r="2.5" fill="#7c3aed"/>
+  <circle cx="40" cy="28" r="2.5" fill="#7c3aed"/>
+  <circle cx="28" cy="36" r="2.5" fill="#4f46e5" opacity="0.6"/>
+  <circle cx="36" cy="36" r="2.5" fill="#4f46e5" opacity="0.6"/>
+  <line x1="32" y1="22" x2="24" y2="28" stroke="#4f46e5" stroke-width="1.5"/>
+  <line x1="32" y1="22" x2="40" y2="28" stroke="#4f46e5" stroke-width="1.5"/>
+  <line x1="24" y1="28" x2="28" y2="36" stroke="#7c3aed" stroke-width="1.5"/>
+  <line x1="40" y1="28" x2="36" y2="36" stroke="#7c3aed" stroke-width="1.5"/>
+  <line x1="24" y1="28" x2="36" y2="36" stroke="#4f46e5" stroke-width="1" opacity="0.4"/>
+</svg>

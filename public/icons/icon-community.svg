@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Globe / community icon -->
+  <circle cx="32" cy="32" r="24" fill="#4f46e5" opacity="0.08" stroke="#4f46e5" stroke-width="2.5"/>
+  <!-- latitude lines -->
+  <path d="M8 32 Q20 26 32 32 Q44 38 56 32" stroke="#4f46e5" stroke-width="1.8" fill="none"/>
+  <path d="M8 32 Q20 38 32 32 Q44 26 56 32" stroke="#4f46e5" stroke-width="1" opacity="0.4" fill="none"/>
+  <!-- longitude lines -->
+  <path d="M32 8 Q22 20 22 32 Q22 44 32 56" stroke="#4f46e5" stroke-width="1.8" fill="none"/>
+  <path d="M32 8 Q42 20 42 32 Q42 44 32 56" stroke="#4f46e5" stroke-width="1.8" fill="none"/>
+  <!-- vertical axis -->
+  <line x1="32" y1="8" x2="32" y2="56" stroke="#4f46e5" stroke-width="1" opacity="0.3"/>
+</svg>
