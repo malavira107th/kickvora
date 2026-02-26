@@ -47,7 +47,7 @@ export const metadata: Metadata = {
       "Build your dream cricket or basketball team, track real player performance, and compete on skill-based leaderboards. Free to play, forever.",
     images: [
       {
-        url: "/brand/og-image.png",
+        url: "/brand/og-image.webp",
         width: 1200,
         height: 630,
         alt: "Kickvora — Cricket & Basketball Strategy Platform",
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     title: "Kickvora — Cricket & Basketball Strategy Platform",
     description:
       "Build your dream team, track real player performance, and compete on skill-based leaderboards. Free to play.",
-    images: ["/brand/og-image.png"],
+    images: ["/brand/og-image.webp"],
   },
 };
 
