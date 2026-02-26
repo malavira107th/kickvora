@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  username     String     @unique
+  email        String     @unique
+  passwordHash String
+  role         Role       @default(USER)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  teams        UserTeam[]
+}
+
+model Match {
+  id          Int         @id @default(autoincrement())
+  title       String
+  sport       Sport
+  teamA       String
+  teamB       String
+  scheduledAt DateTime
+  status      MatchStatus @default(UPCOMING)
+  venue       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  players     Player[]
+  userTeams   UserTeam[]
+}
+
+model Player {
+  id                Int          @id @default(autoincrement())
+  matchId           Int
+  match             Match        @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  name              String
+  team              String
+  role              String
+  sport             Sport
+  performancePoints Float        @default(0)
+  pointsUpdated     Boolean      @default(false)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  teamPlayers       TeamPlayer[]
+}
+
+model UserTeam {
+  id          Int          @id @default(autoincrement())
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matchId     Int
+  match       Match        @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  teamName    String
+  totalPoints Float        @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  players     TeamPlayer[]
+}
+
+model TeamPlayer {
+  id           Int      @id @default(autoincrement())
+  teamId       Int
+  team         UserTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  playerId     Int
+  player       Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  isCaptain    Boolean  @default(false)
+  isViceCaptain Boolean @default(false)
+  createdAt    DateTime @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Sport {
+  CRICKET
+  BASKETBALL
+}
+
+enum MatchStatus {
+  UPCOMING
+  LIVE
+  COMPLETED
+}
