@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -69,34 +70,50 @@ export default function HomePage() {
       <Navbar />
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-indigo-700 via-indigo-600 to-purple-600 text-white py-20 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
-            <span>🏏</span>
-            <span>Cricket &amp; Basketball</span>
-            <span>·</span>
-            <span>100% Free to Play</span>
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
-            Where Strategy Meets the Spirit of Sport
-          </h1>
-          <p className="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-10">
-            Build your dream team from real players, track their performance in live matches, and
-            compete with fans on skill-based leaderboards. No luck involved — just knowledge.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/register"
-              className="bg-white text-indigo-700 font-semibold px-8 py-3 rounded-xl hover:bg-gray-50 transition-colors text-base"
-            >
-              Create Your Team — Free
-            </Link>
-            <Link
-              href="/how-it-works"
-              className="border border-white/40 text-white font-semibold px-8 py-3 rounded-xl hover:bg-white/10 transition-colors text-base"
-            >
-              How It Works
-            </Link>
+      <section className="relative bg-gradient-to-br from-indigo-700 via-indigo-600 to-purple-600 text-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row items-center gap-8 py-16 lg:py-20">
+            {/* Left: text content */}
+            <div className="flex-1 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
+                <span>🏏</span>
+                <span>Cricket &amp; Basketball</span>
+                <span>·</span>
+                <span>100% Free to Play</span>
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
+                Where Strategy Meets the Spirit of Sport
+              </h1>
+              <p className="text-lg sm:text-xl text-white/80 max-w-2xl mb-10">
+                Build your dream team from real players, track their performance in live matches, and
+                compete with fans on skill-based leaderboards. No luck involved — just knowledge.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Link
+                  href="/register"
+                  className="bg-white text-indigo-700 font-semibold px-8 py-3 rounded-xl hover:bg-gray-50 transition-colors text-base"
+                >
+                  Create Your Team — Free
+                </Link>
+                <Link
+                  href="/how-it-works"
+                  className="border border-white/40 text-white font-semibold px-8 py-3 rounded-xl hover:bg-white/10 transition-colors text-base"
+                >
+                  How It Works
+                </Link>
+              </div>
+            </div>
+            {/* Right: hero banner image */}
+            <div className="flex-1 flex justify-center lg:justify-end">
+              <Image
+                src="/brand/hero-banner.webp"
+                alt="Kickvora strategy platform — cricket and basketball player cards"
+                width={640}
+                height={400}
+                className="w-full max-w-lg lg:max-w-xl rounded-2xl object-contain drop-shadow-2xl"
+                priority
+              />
+            </div>
           </div>
         </div>
       </section>
