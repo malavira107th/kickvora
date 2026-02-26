@@ -19,14 +19,48 @@ export const metadata: Metadata = {
     template: "%s | Kickvora",
   },
   description:
-    "Build your dream cricket or basketball team, track real player performance, and compete on skill-based leaderboards. Free to play, forever.",
+    "Test your sports knowledge and strategic skills with Kickvora. Build your dream team, compete in free-to-play challenges, and rise to the top of the leaderboards.",
   keywords: [
     "cricket strategy",
     "basketball strategy",
     "sports knowledge game",
     "team building",
     "skill-based sports",
+    "free sports game",
+    "cricket team builder",
   ],
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    url: "https://kickvora.com",
+    siteName: "Kickvora",
+    title: "Kickvora — Cricket & Basketball Strategy Platform",
+    description:
+      "Build your dream cricket or basketball team, track real player performance, and compete on skill-based leaderboards. Free to play, forever.",
+    images: [
+      {
+        url: "/brand/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Kickvora — Cricket & Basketball Strategy Platform",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kickvora — Cricket & Basketball Strategy Platform",
+    description:
+      "Build your dream team, track real player performance, and compete on skill-based leaderboards. Free to play.",
+    images: ["/brand/og-image.png"],
+  },
 };
 
 export default function RootLayout({
