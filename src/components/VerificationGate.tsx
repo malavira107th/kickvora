@@ -13,6 +13,32 @@ declare global {
 }
 
 const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
+const STORAGE_KEY = "kv_gate_verified";
+const EXPIRY_DAYS = 7;
+
+function isVerifiedLocally(): boolean {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const { expiry } = JSON.parse(raw);
+    if (Date.now() > expiry) {
+      localStorage.removeItem(STORAGE_KEY);
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function setVerifiedLocally() {
+  try {
+    const expiry = Date.now() + EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ verified: true, expiry }));
+  } catch {
+    // localStorage not available (private mode, etc.) — ignore
+  }
+}
 
 type GateStep = "loading" | "recaptcha" | "age" | "done" | "blocked";
 type BlockReason = "age" | "error" | "network" | "script";
@@ -26,23 +52,13 @@ export default function VerificationGate({ children }: { children: React.ReactNo
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasTriggered = useRef(false);
 
-  // On mount — check if already verified via cookie
+  // On mount — check localStorage first (instant, no network call)
   useEffect(() => {
-    async function checkStatus() {
-      try {
-        const res = await fetch("/api/verify-gate/status");
-        const data = await res.json();
-        if (data.verified) {
-          setStep("done");
-        } else {
-          setStep("recaptcha");
-        }
-      } catch {
-        // If status check fails, still show the gate
-        setStep("recaptcha");
-      }
+    if (isVerifiedLocally()) {
+      setStep("done");
+    } else {
+      setStep("recaptcha");
     }
-    checkStatus();
   }, []);
 
   // Load reCAPTCHA v3 script dynamically
@@ -73,8 +89,6 @@ export default function VerificationGate({ children }: { children: React.ReactNo
       }
     };
     script.onerror = () => {
-      // reCAPTCHA script failed to load (network issue, ad-blocker, etc.)
-      // Fall back to age verification only
       console.warn("[Kickvora] reCAPTCHA script failed to load. Falling back to age verification.");
       setStep("age");
     };
@@ -136,33 +150,10 @@ export default function VerificationGate({ children }: { children: React.ReactNo
     }
   }, []);
 
-  const handleAgeConfirm = async () => {
-    setVerifying(true);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/verify-gate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ step: "age" }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setStep("done");
-      } else {
-        setError("Session error. Please refresh the page and try again.");
-        setBlockReason("error");
-        setStep("blocked");
-      }
-    } catch {
-      setError("A network error occurred. Please check your connection and try again.");
-      setBlockReason("network");
-      setStep("blocked");
-    } finally {
-      setVerifying(false);
-    }
+  const handleAgeConfirm = () => {
+    // Save verification to localStorage — persists for 7 days
+    setVerifiedLocally();
+    setStep("done");
   };
 
   const handleAgeDecline = () => {
@@ -332,53 +323,71 @@ export default function VerificationGate({ children }: { children: React.ReactNo
 
           {/* Step 1: reCAPTCHA verification */}
           {step === "recaptcha" && (
-            <div>
+            <div style={{ padding: "1rem 0" }}>
               <div
                 style={{
                   background: "#f9fafb",
                   border: "1px solid #e5e7eb",
                   borderRadius: "10px",
                   padding: "1.25rem",
-                  marginBottom: "1.25rem",
+                  marginBottom: "1rem",
                 }}
               >
-                <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#111827", marginBottom: "0.375rem" }}>
+                <p
+                  style={{
+                    fontSize: "0.9375rem",
+                    fontWeight: 600,
+                    color: "#111827",
+                    marginBottom: "0.375rem",
+                  }}
+                >
                   Step 1 of 2 — Security Check
                 </p>
-                <p style={{ fontSize: "0.8rem", color: "#6b7280" }}>
+                <p style={{ fontSize: "0.8125rem", color: "#6b7280", lineHeight: 1.5 }}>
                   We are verifying your request with Google reCAPTCHA to protect the platform from automated access.
                 </p>
               </div>
 
               {verifying ? (
-                <div style={{ padding: "0.75rem 0" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", color: "#6b7280", fontSize: "0.875rem" }}>
                   <div
                     style={{
-                      width: "32px",
-                      height: "32px",
-                      border: "3px solid #e5e7eb",
+                      width: "18px",
+                      height: "18px",
+                      border: "2px solid #e5e7eb",
                       borderTopColor: "#4f46e5",
                       borderRadius: "50%",
                       animation: "spin 0.8s linear infinite",
-                      margin: "0 auto 0.75rem",
                     }}
                   />
-                  <p style={{ color: "#6b7280", fontSize: "0.8rem" }}>Verifying with Google...</p>
+                  Verifying with Google...
                 </div>
               ) : (
-                <p style={{ color: "#6b7280", fontSize: "0.8rem" }}>Verification is running automatically...</p>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", color: "#6b7280", fontSize: "0.875rem" }}>
+                  <div
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      border: "2px solid #e5e7eb",
+                      borderTopColor: "#4f46e5",
+                      borderRadius: "50%",
+                      animation: "spin 0.8s linear infinite",
+                    }}
+                  />
+                  Verifying with Google...
+                </div>
               )}
             </div>
           )}
 
-          {/* Step 2: Age verification */}
+          {/* Step 2: Age confirmation */}
           {step === "age" && (
-            <div>
+            <div style={{ padding: "0.5rem 0" }}>
               <div
                 style={{
                   background: "#f0fdf4",
                   border: "1px solid #bbf7d0",
-                  borderRadius: "10px",
+                  borderRadius: "8px",
                   padding: "0.75rem 1rem",
                   marginBottom: "1.25rem",
                   display: "flex",
@@ -387,9 +396,7 @@ export default function VerificationGate({ children }: { children: React.ReactNo
                 }}
               >
                 <span style={{ color: "#16a34a", fontSize: "1rem" }}>✓</span>
-                <p style={{ fontSize: "0.8rem", color: "#15803d", fontWeight: 500 }}>
-                  Security check passed
-                </p>
+                <span style={{ fontSize: "0.875rem", color: "#15803d", fontWeight: 500 }}>Security check passed</span>
               </div>
 
               <div
@@ -398,155 +405,147 @@ export default function VerificationGate({ children }: { children: React.ReactNo
                   border: "1px solid #e5e7eb",
                   borderRadius: "10px",
                   padding: "1.25rem",
-                  marginBottom: "1.5rem",
+                  marginBottom: "1.25rem",
                 }}
               >
-                <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#111827", marginBottom: "0.5rem" }}>
+                <p
+                  style={{
+                    fontSize: "0.9375rem",
+                    fontWeight: 600,
+                    color: "#111827",
+                    marginBottom: "0.375rem",
+                  }}
+                >
                   Step 2 of 2 — Age Confirmation
                 </p>
-                <p style={{ fontSize: "0.8rem", color: "#6b7280", lineHeight: "1.5" }}>
-                  This platform is intended for users who are <strong>18 years of age or older</strong>.
-                  Please confirm your age to continue.
+                <p style={{ fontSize: "0.8125rem", color: "#6b7280", lineHeight: 1.5 }}>
+                  This platform is intended for users who are{" "}
+                  <strong style={{ color: "#111827" }}>18 years of age or older</strong>. Please confirm your age to continue.
                 </p>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
-                <button
-                  onClick={handleAgeConfirm}
-                  disabled={verifying}
-                  style={{
-                    background: verifying ? "#a5b4fc" : "#4f46e5",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: "8px",
-                    padding: "0.75rem 1.5rem",
-                    fontSize: "0.9rem",
-                    fontWeight: 600,
-                    cursor: verifying ? "not-allowed" : "pointer",
-                    width: "100%",
-                    transition: "background 0.15s",
-                  }}
-                >
-                  {verifying ? "Please wait..." : "Yes, I am 18 or older — Enter"}
-                </button>
-                <button
-                  onClick={handleAgeDecline}
-                  disabled={verifying}
-                  style={{
-                    background: "transparent",
-                    color: "#6b7280",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    padding: "0.75rem 1.5rem",
-                    fontSize: "0.875rem",
-                    fontWeight: 500,
-                    cursor: verifying ? "not-allowed" : "pointer",
-                    width: "100%",
-                  }}
-                >
-                  No, I am under 18
-                </button>
-              </div>
+              <button
+                onClick={handleAgeConfirm}
+                style={{
+                  width: "100%",
+                  padding: "0.875rem",
+                  background: "#4f46e5",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "10px",
+                  fontSize: "0.9375rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  marginBottom: "0.75rem",
+                  transition: "background 0.15s",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.background = "#4338ca")}
+                onMouseOut={(e) => (e.currentTarget.style.background = "#4f46e5")}
+              >
+                Yes, I am 18 or older — Enter
+              </button>
+
+              <button
+                onClick={handleAgeDecline}
+                style={{
+                  width: "100%",
+                  padding: "0.75rem",
+                  background: "transparent",
+                  color: "#6b7280",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "10px",
+                  fontSize: "0.875rem",
+                  cursor: "pointer",
+                  transition: "border-color 0.15s",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.borderColor = "#9ca3af")}
+                onMouseOut={(e) => (e.currentTarget.style.borderColor = "#e5e7eb")}
+              >
+                No, I am under 18
+              </button>
             </div>
           )}
 
           {/* Blocked state */}
           {step === "blocked" && (
-            <div>
+            <div style={{ padding: "0.5rem 0" }}>
               <div
                 style={{
+                  width: "52px",
+                  height: "52px",
+                  borderRadius: "50%",
                   background: blockReason === "age" ? "#fef2f2" : "#fff7ed",
-                  border: `1px solid ${blockReason === "age" ? "#fecaca" : "#fed7aa"}`,
-                  borderRadius: "10px",
-                  padding: "1.25rem",
-                  marginBottom: "1.25rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 1rem",
+                  fontSize: "1.5rem",
                 }}
               >
-                <p style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>
-                  {blockReason === "age" ? "🚫" : "⚠️"}
-                </p>
-                <p
-                  style={{
-                    fontSize: "0.9rem",
-                    fontWeight: 600,
-                    color: blockReason === "age" ? "#991b1b" : "#92400e",
-                    marginBottom: "0.375rem",
-                  }}
-                >
-                  {blockReason === "age" ? "Access Restricted" : "Verification Error"}
-                </p>
-                <p
-                  style={{
-                    fontSize: "0.8rem",
-                    color: blockReason === "age" ? "#b91c1c" : "#b45309",
-                    lineHeight: "1.5",
-                  }}
-                >
-                  {error || "You do not meet the requirements to access this platform."}
-                </p>
+                {blockReason === "age" ? "🔞" : "⚠️"}
               </div>
 
-              {/* Show retry button for all non-age blocks */}
+              <p
+                style={{
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  color: "#111827",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                {blockReason === "age" ? "Access Restricted" : "Verification Failed"}
+              </p>
+
+              {error && (
+                <p style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "1.25rem", lineHeight: 1.5 }}>
+                  {error}
+                </p>
+              )}
+
               {canRetry && (
                 <button
                   onClick={handleRetry}
                   style={{
+                    width: "100%",
+                    padding: "0.875rem",
                     background: "#4f46e5",
-                    color: "#ffffff",
+                    color: "#fff",
                     border: "none",
-                    borderRadius: "8px",
-                    padding: "0.75rem 1.5rem",
-                    fontSize: "0.875rem",
+                    borderRadius: "10px",
+                    fontSize: "0.9375rem",
                     fontWeight: 600,
                     cursor: "pointer",
-                    width: "100%",
-                    marginBottom: "0.5rem",
                   }}
                 >
                   Try Again
                 </button>
               )}
-
-              {blockReason === "network" && (
-                <p style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "0.5rem" }}>
-                  If this error persists, please check your internet connection or try disabling any ad-blockers.
-                </p>
-              )}
             </div>
           )}
 
-          {/* reCAPTCHA branding (required by Google ToS) */}
-          <p
-            style={{
-              fontSize: "0.7rem",
-              color: "#9ca3af",
-              marginTop: "1.5rem",
-              lineHeight: "1.4",
-            }}
-          >
-            Protected by reCAPTCHA —{" "}
-            <a
-              href="https://policies.google.com/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#6b7280", textDecoration: "underline" }}
+          {/* reCAPTCHA badge attribution */}
+          {step !== "blocked" && (
+            <p
+              style={{
+                fontSize: "0.6875rem",
+                color: "#9ca3af",
+                marginTop: "1.5rem",
+                lineHeight: 1.4,
+              }}
             >
-              Privacy
-            </a>{" "}
-            &amp;{" "}
-            <a
-              href="https://policies.google.com/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#6b7280", textDecoration: "underline" }}
-            >
-              Terms
-            </a>
-          </p>
+              Protected by reCAPTCHA —{" "}
+              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#6b7280" }}>
+                Privacy
+              </a>{" "}
+              &amp;{" "}
+              <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" style={{ color: "#6b7280" }}>
+                Terms
+              </a>
+            </p>
+          )}
         </div>
       </div>
 
-      {/* CSS keyframe for spinner */}
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
