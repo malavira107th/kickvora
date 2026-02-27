@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
   // Ensure environment variables are available at build time
   env: {
     NEXT_PUBLIC_APP_NAME: "Kickvora",
+    NEXT_PUBLIC_RECAPTCHA_SITE_KEY: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "",
   },
 };
 

@@ -11,3 +11,10 @@
 - [ ] Matches page — empty state design (no mock data)
 - [ ] Leaderboard page — empty state design (no mock data)
 - [ ] Profile page — clean UI with real fields
+
+## reCAPTCHA + Age Gate
+- [ ] Add RECAPTCHA_SECRET_KEY and NEXT_PUBLIC_RECAPTCHA_SITE_KEY env vars
+- [ ] Build /api/verify-gate backend route (reCAPTCHA v3 token check + issue signed cookie)
+- [ ] Build VerificationGate client component (blur overlay, Step 1 reCAPTCHA, Step 2 age)
+- [ ] Wire VerificationGate into root layout.tsx
+- [ ] Handle session cookie to skip gate for already-verified users
