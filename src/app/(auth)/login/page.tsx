@@ -48,7 +48,7 @@ export default function LoginPage() {
         {/* Background image */}
         <div className="absolute inset-0">
           <Image
-            src="/brand/hero-bg.webp"
+            src="/images/hero-bg.webp"
             alt=""
             fill
             className="object-cover opacity-20"
