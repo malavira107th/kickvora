@@ -123,16 +123,17 @@ export default function HomePage() {
       <Navbar />
 
       {/* ── HERO ── */}
-      <section className="relative bg-gradient-to-br from-indigo-800 via-indigo-700 to-purple-700 text-white overflow-hidden">
-        {/* subtle grid texture */}
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)",
-            backgroundSize: "32px 32px",
-          }}
+      <section className="relative text-white overflow-hidden">
+        {/* Full-bleed hero background image */}
+        <Image
+          src="/images/hero-bg.webp"
+          alt="Cricket and basketball — Kickvora"
+          fill
+          className="object-cover object-center"
+          priority
         />
+        {/* Dark indigo overlay so text stays readable */}
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/90 via-indigo-900/75 to-purple-900/80" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center gap-10 py-20 lg:py-28">
             {/* Left */}
