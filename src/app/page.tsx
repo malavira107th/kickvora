@@ -174,16 +174,93 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right — platform visual */}
+            {/* Right — static UI card stack */}
             <div className="flex-1 flex justify-center lg:justify-end w-full">
-              <Image
-                src="/images/platform-visual.webp"
-                alt="Kickvora platform — team builder and leaderboard"
-                width={560}
-                height={420}
-                className="w-full max-w-md lg:max-w-lg rounded-2xl shadow-2xl object-contain"
-                priority
-              />
+              <div className="w-full max-w-sm space-y-3">
+
+                {/* Match card */}
+                <div className="bg-white/10 border border-white/15 rounded-2xl p-4 backdrop-blur-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-semibold text-indigo-300 uppercase tracking-wider">Upcoming Match</span>
+                    <span className="text-xs bg-indigo-600/60 text-indigo-100 px-2 py-0.5 rounded-full font-medium">T20</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-center">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Image src="/icons/icon-cricket.svg" alt="Cricket" width={16} height={16} className="brightness-0 invert opacity-80" />
+                        <span className="text-white font-bold text-base">IND</span>
+                      </div>
+                      <span className="text-white/50 text-xs">India</span>
+                    </div>
+                    <span className="text-white/40 font-semibold text-sm">vs</span>
+                    <div className="text-center">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Image src="/icons/icon-cricket.svg" alt="Cricket" width={16} height={16} className="brightness-0 invert opacity-80" />
+                        <span className="text-white font-bold text-base">AUS</span>
+                      </div>
+                      <span className="text-white/50 text-xs">Australia</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-white/60 text-xs">Team size</p>
+                      <p className="text-white font-bold text-base">11 Players</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Player selection cards */}
+                <div className="bg-white/10 border border-white/15 rounded-2xl p-4 backdrop-blur-sm">
+                  <p className="text-xs font-semibold text-indigo-300 uppercase tracking-wider mb-3">Select Your Players</p>
+                  <div className="space-y-2">
+                    {[
+                      { name: "Batsman", stat: "Avg 52.4", role: "BAT", selected: true },
+                      { name: "All-Rounder", stat: "Avg 38.1 · 2.8 wkts", role: "AR", selected: true },
+                      { name: "Bowler", stat: "Econ 6.2 · 3.1 wkts", role: "BOWL", selected: false },
+                    ].map((p) => (
+                      <div key={p.name} className={`flex items-center justify-between rounded-xl px-3 py-2 ${
+                        p.selected ? "bg-indigo-600/30 border border-indigo-400/40" : "bg-white/5 border border-white/10"
+                      }`}>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                            p.selected ? "bg-indigo-500 text-white" : "bg-white/10 text-white/60"
+                          }`}>{p.role}</span>
+                          <span className="text-white text-sm font-medium">{p.name}</span>
+                        </div>
+                        <span className="text-white/50 text-xs">{p.stat}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Leaderboard strip */}
+                <div className="bg-white/10 border border-white/15 rounded-2xl p-4 backdrop-blur-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-semibold text-indigo-300 uppercase tracking-wider">Leaderboard</p>
+                    <Image src="/icons/icon-leaderboard.svg" alt="Leaderboard" width={16} height={16} className="brightness-0 invert opacity-60" />
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { rank: 1, label: "Your Team", pts: "284 pts", highlight: true },
+                      { rank: 2, label: "Team Falcon", pts: "271 pts", highlight: false },
+                      { rank: 3, label: "Team Blaze", pts: "259 pts", highlight: false },
+                    ].map((row) => (
+                      <div key={row.rank} className={`flex items-center gap-3 rounded-lg px-3 py-1.5 ${
+                        row.highlight ? "bg-indigo-500/25 border border-indigo-400/30" : ""
+                      }`}>
+                        <span className={`text-xs font-bold w-5 text-center ${
+                          row.rank === 1 ? "text-yellow-400" : "text-white/40"
+                        }`}>#{row.rank}</span>
+                        <span className={`flex-1 text-sm ${
+                          row.highlight ? "text-white font-semibold" : "text-white/70"
+                        }`}>{row.label}</span>
+                        <span className={`text-xs font-semibold ${
+                          row.highlight ? "text-indigo-300" : "text-white/50"
+                        }`}>{row.pts}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
         </div>
