@@ -5,8 +5,8 @@ const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET_KEY!;
 const JWT_SECRET = process.env.JWT_SECRET!;
 const SCORE_THRESHOLD = 0.5;
 const GATE_COOKIE_NAME = "kv_gate_verified";
-// Cookie valid for 24 hours
-const COOKIE_MAX_AGE = 60 * 60 * 24;
+// Cookie valid for 7 days (increased from 24h for better UX)
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 
 export async function POST(req: NextRequest) {
   try {
@@ -81,63 +81,21 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // reCAPTCHA passed — issue a partial gate token (step1 done)
-      const partialToken = await new SignJWT({
-        step1: true,
-        step2: false,
-        score: verifyData.score,
-      })
-        .setProtectedHeader({ alg: "HS256" })
-        .setIssuedAt()
-        .setExpirationTime("1h") // short-lived until step 2 completes
-        .sign(new TextEncoder().encode(JWT_SECRET));
-
-      const response = NextResponse.json({ success: true, score: verifyData.score });
-      response.cookies.set("kv_gate_step1", partialToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60, // 1 hour to complete step 2
-        path: "/",
-      });
-
-      return response;
+      // reCAPTCHA passed — return success (age confirmation is handled client-side)
+      return NextResponse.json({ success: true, score: verifyData.score });
     }
 
-    // Step 2: age verification confirmation
+    // Step 2: age verification — set the final verified cookie
     if (step === "age") {
-      // Verify step 1 was completed
-      const step1Cookie = req.cookies.get("kv_gate_step1");
-      if (!step1Cookie?.value) {
+      if (!JWT_SECRET) {
+        console.error("[Gate] JWT_SECRET env var is not set");
         return NextResponse.json(
-          { success: false, error: "Step 1 not completed" },
-          { status: 403 }
+          { success: false, error: "Server configuration error" },
+          { status: 500 }
         );
       }
 
-      // Verify the step1 JWT is valid
-      try {
-        const { payload } = await import("jose").then((m) =>
-          m.jwtVerify(
-            step1Cookie.value,
-            new TextEncoder().encode(JWT_SECRET)
-          )
-        );
-
-        if (!payload.step1) {
-          return NextResponse.json(
-            { success: false, error: "Step 1 verification invalid" },
-            { status: 403 }
-          );
-        }
-      } catch {
-        return NextResponse.json(
-          { success: false, error: "Step 1 token expired or invalid" },
-          { status: 403 }
-        );
-      }
-
-      // Age confirmed — issue the final full-access gate cookie
+      // Issue the final full-access gate cookie
       const finalToken = await new SignJWT({
         verified: true,
         step1: true,
@@ -146,26 +104,17 @@ export async function POST(req: NextRequest) {
       })
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
-        .setExpirationTime("24h")
+        .setExpirationTime("7d")
         .sign(new TextEncoder().encode(JWT_SECRET));
 
       const response = NextResponse.json({ success: true });
 
-      // Set final verified cookie — 24 hours
+      // Set final verified cookie — 7 days
       response.cookies.set(GATE_COOKIE_NAME, finalToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: COOKIE_MAX_AGE,
-        path: "/",
-      });
-
-      // Clear the intermediate step1 cookie
-      response.cookies.set("kv_gate_step1", "", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 0,
         path: "/",
       });
 
