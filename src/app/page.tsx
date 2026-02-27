@@ -177,11 +177,11 @@ export default function HomePage() {
             <div className="flex-1 flex justify-center lg:justify-end">
               <div className="flex flex-col items-center gap-8">
                 <Image
-                  src="/brand/logo-light.webp"
+                  src="/brand/logo-full.webp"
                   alt="Kickvora"
                   width={280}
-                  height={120}
-                  className="w-64 lg:w-72 object-contain brightness-0 invert"
+                  height={280}
+                  className="w-56 lg:w-64 object-contain drop-shadow-2xl"
                   priority
                 />
                 <div className="flex items-center gap-6">
@@ -353,13 +353,16 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-indigo-950/85" />
 
         <div className="relative max-w-3xl mx-auto text-center">
-          <Image
-            src="/brand/logo-light.webp"
-            alt="Kickvora"
-            width={160}
-            height={60}
-            className="h-12 w-auto object-contain brightness-0 invert mx-auto mb-8 opacity-80"
-          />
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <Image
+              src="/brand/logo-icon.webp"
+              alt="Kickvora"
+              width={56}
+              height={56}
+              className="h-14 w-14 object-contain drop-shadow-lg"
+            />
+            <span className="text-white font-bold text-3xl tracking-tight">Kickvora</span>
+          </div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             Ready to test your sports knowledge?
           </h2>

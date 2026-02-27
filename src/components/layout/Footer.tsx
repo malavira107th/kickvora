@@ -14,14 +14,16 @@ export default function Footer() {
 
           {/* Brand — wide column */}
           <div className="md:col-span-5 space-y-5">
-            <Link href="/">
+            {/* Full logo with wordmark */}
+            <Link href="/" className="flex items-center gap-3">
               <Image
-                src="/brand/logo-light.webp"
+                src="/brand/logo-icon.webp"
                 alt="Kickvora"
-                width={200}
-                height={64}
-                className="h-12 w-auto object-contain brightness-0 invert"
+                width={52}
+                height={52}
+                className="h-12 w-12 object-contain"
               />
+              <span className="text-white font-bold text-2xl tracking-tight">Kickvora</span>
             </Link>
 
             <p className="text-sm text-gray-500 leading-relaxed max-w-sm">
@@ -80,7 +82,7 @@ export default function Footer() {
                 { label: "Dashboard", href: "/dashboard" },
               ].map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-gray-500">
+                  <Link href={link.href} className="text-gray-500 hover:text-gray-300">
                     {link.label}
                   </Link>
                 </li>
@@ -99,7 +101,7 @@ export default function Footer() {
                 { label: "Privacy Policy", href: "/privacy" },
               ].map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-gray-500">
+                  <Link href={link.href} className="text-gray-500 hover:text-gray-300">
                     {link.label}
                   </Link>
                 </li>
@@ -108,15 +110,15 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Divider */}
+        {/* Bottom bar */}
         <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Image
-              src="/brand/logo-light.webp"
+              src="/brand/logo-icon.webp"
               alt="Kickvora"
-              width={80}
-              height={28}
-              className="h-5 w-auto object-contain brightness-0 invert opacity-30"
+              width={24}
+              height={24}
+              className="h-6 w-6 object-contain opacity-60"
             />
             <span className="text-xs text-gray-600">&copy; {year} Kickvora. All rights reserved.</span>
           </div>
