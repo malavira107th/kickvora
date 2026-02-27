@@ -13,67 +13,25 @@ declare global {
 }
 
 const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
-const STORAGE_KEY = "kv_gate_verified";
-const EXPIRY_DAYS = 7;
 
-function isVerifiedLocally(): boolean {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    const { expiry } = JSON.parse(raw);
-    if (Date.now() > expiry) {
-      localStorage.removeItem(STORAGE_KEY);
-      return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function setVerifiedLocally() {
-  try {
-    const expiry = Date.now() + EXPIRY_DAYS * 24 * 60 * 60 * 1000;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ verified: true, expiry }));
-  } catch {
-    // localStorage not available (private mode, etc.) — ignore
-  }
-}
-
-type GateStep = "loading" | "recaptcha" | "age" | "done" | "blocked";
-type BlockReason = "age" | "error" | "network" | "script";
+type GateStep = "welcome" | "recaptcha" | "age" | "done" | "blocked";
+type BlockReason = "age" | "error" | "network";
 
 export default function VerificationGate({ children }: { children: React.ReactNode }) {
-  const [step, setStep] = useState<GateStep>("loading");
+  const [step, setStep] = useState<GateStep>("welcome");
   const [recaptchaReady, setRecaptchaReady] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [blockReason, setBlockReason] = useState<BlockReason | null>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasTriggered = useRef(false);
+  const scriptLoadedRef = useRef(false);
 
-  // On mount — check localStorage first (instant, no network call)
+  // Preload the reCAPTCHA script as soon as the gate mounts (but don't execute yet)
   useEffect(() => {
-    if (isVerifiedLocally()) {
-      setStep("done");
-    } else {
-      setStep("recaptcha");
-    }
-  }, []);
+    if (scriptLoadedRef.current) return;
+    if (!SITE_KEY) return;
 
-  // Load reCAPTCHA v3 script dynamically
-  useEffect(() => {
-    if (step !== "recaptcha") return;
-    hasTriggered.current = false;
+    scriptLoadedRef.current = true;
 
-    // If no site key is configured, skip reCAPTCHA and go straight to age verification
-    if (!SITE_KEY) {
-      console.warn("[Kickvora] NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not set. Skipping reCAPTCHA step.");
-      setStep("age");
-      return;
-    }
-
-    // Check if script already loaded
     if (window.grecaptcha) {
       window.grecaptcha.ready(() => setRecaptchaReady(true));
       return;
@@ -88,71 +46,75 @@ export default function VerificationGate({ children }: { children: React.ReactNo
         window.grecaptcha.ready(() => setRecaptchaReady(true));
       }
     };
-    script.onerror = () => {
-      console.warn("[Kickvora] reCAPTCHA script failed to load. Falling back to age verification.");
-      setStep("age");
-    };
     document.head.appendChild(script);
+  }, []);
 
-    // Timeout: if reCAPTCHA doesn't respond in 12 seconds, fall back to age verification
-    timeoutRef.current = setTimeout(() => {
-      if (!hasTriggered.current) {
-        console.warn("[Kickvora] reCAPTCHA timed out. Falling back to age verification.");
-        setStep("age");
-      }
-    }, 12000);
-
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, [step]);
-
-  // Auto-trigger reCAPTCHA as soon as it's ready
-  useEffect(() => {
-    if (recaptchaReady && step === "recaptcha" && !verifying && !hasTriggered.current) {
-      hasTriggered.current = true;
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      handleRecaptcha();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recaptchaReady, step]);
-
-  const handleRecaptcha = useCallback(async () => {
+  const handleStartVerification = useCallback(async () => {
+    setStep("recaptcha");
     setVerifying(true);
     setError(null);
 
-    try {
-      const token = await window.grecaptcha.execute(SITE_KEY, {
-        action: "site_entry",
-      });
-
-      const res = await fetch("/api/verify-gate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, step: "recaptcha" }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setStep("age");
-      } else {
-        setError("Security verification failed. Please try again.");
-        setBlockReason("error");
-        setStep("blocked");
-      }
-    } catch {
-      setError("A network error occurred. Please check your connection and try again.");
-      setBlockReason("network");
-      setStep("blocked");
-    } finally {
+    // If no site key, skip reCAPTCHA and go straight to age step
+    if (!SITE_KEY) {
+      setStep("age");
       setVerifying(false);
+      return;
     }
-  }, []);
+
+    const doVerify = async () => {
+      try {
+        const token = await window.grecaptcha.execute(SITE_KEY, {
+          action: "site_entry",
+        });
+
+        const res = await fetch("/api/verify-gate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, step: "recaptcha" }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          setStep("age");
+        } else {
+          setError("Security verification failed. Please try again.");
+          setBlockReason("error");
+          setStep("blocked");
+        }
+      } catch {
+        setError("A network error occurred. Please check your connection and try again.");
+        setBlockReason("network");
+        setStep("blocked");
+      } finally {
+        setVerifying(false);
+      }
+    };
+
+    if (recaptchaReady) {
+      doVerify();
+    } else {
+      // Wait for reCAPTCHA to be ready (max 10s)
+      let waited = 0;
+      const interval = setInterval(() => {
+        waited += 200;
+        if (window.grecaptcha) {
+          clearInterval(interval);
+          window.grecaptcha.ready(() => {
+            setRecaptchaReady(true);
+            doVerify();
+          });
+        } else if (waited >= 10000) {
+          clearInterval(interval);
+          // Fallback: skip reCAPTCHA and go to age step
+          setStep("age");
+          setVerifying(false);
+        }
+      }, 200);
+    }
+  }, [recaptchaReady]);
 
   const handleAgeConfirm = () => {
-    // Save verification to localStorage — persists for 7 days
-    setVerifiedLocally();
     setStep("done");
   };
 
@@ -165,21 +127,19 @@ export default function VerificationGate({ children }: { children: React.ReactNo
   const handleRetry = () => {
     setError(null);
     setBlockReason(null);
-    setRecaptchaReady(false);
-    hasTriggered.current = false;
-    setStep("recaptcha");
+    setStep("welcome");
   };
 
-  // Site is verified — render children normally
+  // Verified — render children
   if (step === "done") {
     return <>{children}</>;
   }
 
-  const canRetry = blockReason === "error" || blockReason === "network" || blockReason === "script";
+  const canRetry = blockReason === "error" || blockReason === "network";
 
   return (
     <>
-      {/* Blurred, non-interactive site content behind the gate */}
+      {/* Blurred site content behind the gate */}
       <div
         aria-hidden="true"
         style={{
@@ -254,8 +214,8 @@ export default function VerificationGate({ children }: { children: React.ReactNo
             Cricket &amp; Basketball Strategy Platform
           </p>
 
-          {/* Step indicator */}
-          {(step === "recaptcha" || step === "age" || step === "loading") && (
+          {/* Step indicator — shown during recaptcha and age steps */}
+          {(step === "recaptcha" || step === "age") && (
             <div
               style={{
                 display: "flex",
@@ -265,13 +225,12 @@ export default function VerificationGate({ children }: { children: React.ReactNo
                 marginBottom: "1.75rem",
               }}
             >
-              {/* Step 1 dot */}
               <div
                 style={{
                   width: "28px",
                   height: "28px",
                   borderRadius: "50%",
-                  background: step === "recaptcha" || step === "loading" ? "#4f46e5" : "#10b981",
+                  background: step === "recaptcha" ? "#4f46e5" : "#10b981",
                   color: "#fff",
                   fontSize: "0.75rem",
                   fontWeight: 700,
@@ -283,7 +242,6 @@ export default function VerificationGate({ children }: { children: React.ReactNo
                 {step === "age" ? "✓" : "1"}
               </div>
               <div style={{ height: "2px", width: "40px", background: step === "age" ? "#10b981" : "#e5e7eb" }} />
-              {/* Step 2 dot */}
               <div
                 style={{
                   width: "28px",
@@ -303,25 +261,51 @@ export default function VerificationGate({ children }: { children: React.ReactNo
             </div>
           )}
 
-          {/* Loading state */}
-          {step === "loading" && (
-            <div style={{ padding: "1rem 0" }}>
+          {/* Welcome step — user must click to begin */}
+          {step === "welcome" && (
+            <div style={{ padding: "0.5rem 0" }}>
               <div
                 style={{
-                  width: "36px",
-                  height: "36px",
-                  border: "3px solid #e5e7eb",
-                  borderTopColor: "#4f46e5",
-                  borderRadius: "50%",
-                  animation: "spin 0.8s linear infinite",
-                  margin: "0 auto 1rem",
+                  background: "#f9fafb",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "10px",
+                  padding: "1.25rem",
+                  marginBottom: "1.5rem",
+                  textAlign: "left",
                 }}
-              />
-              <p style={{ color: "#6b7280", fontSize: "0.875rem" }}>Checking your session...</p>
+              >
+                <p style={{ fontSize: "0.875rem", color: "#374151", lineHeight: 1.6, margin: 0 }}>
+                  Before entering, we need to:
+                </p>
+                <ul style={{ margin: "0.75rem 0 0", paddingLeft: "1.25rem", fontSize: "0.875rem", color: "#6b7280", lineHeight: 1.8 }}>
+                  <li>Run a quick security check (reCAPTCHA)</li>
+                  <li>Confirm you are 18 years or older</li>
+                </ul>
+              </div>
+
+              <button
+                onClick={handleStartVerification}
+                style={{
+                  width: "100%",
+                  padding: "0.9375rem",
+                  background: "#4f46e5",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "10px",
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "background 0.15s",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.background = "#4338ca")}
+                onMouseOut={(e) => (e.currentTarget.style.background = "#4f46e5")}
+              >
+                Continue to Kickvora →
+              </button>
             </div>
           )}
 
-          {/* Step 1: reCAPTCHA verification */}
+          {/* Step 1: reCAPTCHA in progress */}
           {step === "recaptcha" && (
             <div style={{ padding: "1rem 0" }}>
               <div
@@ -333,50 +317,28 @@ export default function VerificationGate({ children }: { children: React.ReactNo
                   marginBottom: "1rem",
                 }}
               >
-                <p
-                  style={{
-                    fontSize: "0.9375rem",
-                    fontWeight: 600,
-                    color: "#111827",
-                    marginBottom: "0.375rem",
-                  }}
-                >
+                <p style={{ fontSize: "0.9375rem", fontWeight: 600, color: "#111827", marginBottom: "0.375rem" }}>
                   Step 1 of 2 — Security Check
                 </p>
                 <p style={{ fontSize: "0.8125rem", color: "#6b7280", lineHeight: 1.5 }}>
-                  We are verifying your request with Google reCAPTCHA to protect the platform from automated access.
+                  Verifying your request with Google reCAPTCHA to protect the platform from automated access.
                 </p>
               </div>
 
-              {verifying ? (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", color: "#6b7280", fontSize: "0.875rem" }}>
-                  <div
-                    style={{
-                      width: "18px",
-                      height: "18px",
-                      border: "2px solid #e5e7eb",
-                      borderTopColor: "#4f46e5",
-                      borderRadius: "50%",
-                      animation: "spin 0.8s linear infinite",
-                    }}
-                  />
-                  Verifying with Google...
-                </div>
-              ) : (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", color: "#6b7280", fontSize: "0.875rem" }}>
-                  <div
-                    style={{
-                      width: "18px",
-                      height: "18px",
-                      border: "2px solid #e5e7eb",
-                      borderTopColor: "#4f46e5",
-                      borderRadius: "50%",
-                      animation: "spin 0.8s linear infinite",
-                    }}
-                  />
-                  Verifying with Google...
-                </div>
-              )}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", color: "#6b7280", fontSize: "0.875rem" }}>
+                <div
+                  style={{
+                    width: "18px",
+                    height: "18px",
+                    border: "2px solid #e5e7eb",
+                    borderTopColor: "#4f46e5",
+                    borderRadius: "50%",
+                    animation: "spin 0.8s linear infinite",
+                    flexShrink: 0,
+                  }}
+                />
+                Verifying with Google...
+              </div>
             </div>
           )}
 
@@ -408,14 +370,7 @@ export default function VerificationGate({ children }: { children: React.ReactNo
                   marginBottom: "1.25rem",
                 }}
               >
-                <p
-                  style={{
-                    fontSize: "0.9375rem",
-                    fontWeight: 600,
-                    color: "#111827",
-                    marginBottom: "0.375rem",
-                  }}
-                >
+                <p style={{ fontSize: "0.9375rem", fontWeight: 600, color: "#111827", marginBottom: "0.375rem" }}>
                   Step 2 of 2 — Age Confirmation
                 </p>
                 <p style={{ fontSize: "0.8125rem", color: "#6b7280", lineHeight: 1.5 }}>
@@ -485,14 +440,7 @@ export default function VerificationGate({ children }: { children: React.ReactNo
                 {blockReason === "age" ? "🔞" : "⚠️"}
               </div>
 
-              <p
-                style={{
-                  fontSize: "1rem",
-                  fontWeight: 700,
-                  color: "#111827",
-                  marginBottom: "0.5rem",
-                }}
-              >
+              <p style={{ fontSize: "1rem", fontWeight: 700, color: "#111827", marginBottom: "0.5rem" }}>
                 {blockReason === "age" ? "Access Restricted" : "Verification Failed"}
               </p>
 
@@ -523,16 +471,9 @@ export default function VerificationGate({ children }: { children: React.ReactNo
             </div>
           )}
 
-          {/* reCAPTCHA badge attribution */}
+          {/* reCAPTCHA attribution */}
           {step !== "blocked" && (
-            <p
-              style={{
-                fontSize: "0.6875rem",
-                color: "#9ca3af",
-                marginTop: "1.5rem",
-                lineHeight: 1.4,
-              }}
-            >
+            <p style={{ fontSize: "0.6875rem", color: "#9ca3af", marginTop: "1.5rem", lineHeight: 1.4 }}>
               Protected by reCAPTCHA —{" "}
               <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#6b7280" }}>
                 Privacy
