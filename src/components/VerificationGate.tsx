@@ -20,7 +20,6 @@ type BlockReason = "age" | "error" | "network";
 export default function VerificationGate({ children }: { children: React.ReactNode }) {
   const [step, setStep] = useState<GateStep>("welcome");
   const [recaptchaReady, setRecaptchaReady] = useState(false);
-  const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [blockReason, setBlockReason] = useState<BlockReason | null>(null);
   const scriptLoadedRef = useRef(false);
@@ -51,13 +50,11 @@ export default function VerificationGate({ children }: { children: React.ReactNo
 
   const handleStartVerification = useCallback(async () => {
     setStep("recaptcha");
-    setVerifying(true);
     setError(null);
 
-    // If no site key, skip reCAPTCHA and go straight to age step
+    // If no site key configured, skip reCAPTCHA and go straight to age step
     if (!SITE_KEY) {
       setStep("age");
-      setVerifying(false);
       return;
     }
 
@@ -86,8 +83,6 @@ export default function VerificationGate({ children }: { children: React.ReactNo
         setError("A network error occurred. Please check your connection and try again.");
         setBlockReason("network");
         setStep("blocked");
-      } finally {
-        setVerifying(false);
       }
     };
 
@@ -108,7 +103,6 @@ export default function VerificationGate({ children }: { children: React.ReactNo
           clearInterval(interval);
           // Fallback: skip reCAPTCHA and go to age step
           setStep("age");
-          setVerifying(false);
         }
       }, 200);
     }
