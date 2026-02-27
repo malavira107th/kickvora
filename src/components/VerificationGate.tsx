@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
 
 declare global {
@@ -12,15 +12,19 @@ declare global {
   }
 }
 
-const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!;
+const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
 
 type GateStep = "loading" | "recaptcha" | "age" | "done" | "blocked";
+type BlockReason = "age" | "error" | "network" | "script";
 
 export default function VerificationGate({ children }: { children: React.ReactNode }) {
   const [step, setStep] = useState<GateStep>("loading");
   const [recaptchaReady, setRecaptchaReady] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [blockReason, setBlockReason] = useState<BlockReason | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasTriggered = useRef(false);
 
   // On mount — check if already verified via cookie
   useEffect(() => {
@@ -34,15 +38,24 @@ export default function VerificationGate({ children }: { children: React.ReactNo
           setStep("recaptcha");
         }
       } catch {
+        // If status check fails, still show the gate
         setStep("recaptcha");
       }
     }
     checkStatus();
   }, []);
 
-  // Load reCAPTCHA v3 script dynamically (no CDN in HTML head — loaded on demand)
+  // Load reCAPTCHA v3 script dynamically
   useEffect(() => {
     if (step !== "recaptcha") return;
+    hasTriggered.current = false;
+
+    // If no site key is configured, skip reCAPTCHA and go straight to age verification
+    if (!SITE_KEY) {
+      console.warn("[Kickvora] NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not set. Skipping reCAPTCHA step.");
+      setStep("age");
+      return;
+    }
 
     // Check if script already loaded
     if (window.grecaptcha) {
@@ -55,18 +68,36 @@ export default function VerificationGate({ children }: { children: React.ReactNo
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      window.grecaptcha.ready(() => setRecaptchaReady(true));
+      if (window.grecaptcha) {
+        window.grecaptcha.ready(() => setRecaptchaReady(true));
+      }
+    };
+    script.onerror = () => {
+      // reCAPTCHA script failed to load (network issue, ad-blocker, etc.)
+      // Fall back to age verification only
+      console.warn("[Kickvora] reCAPTCHA script failed to load. Falling back to age verification.");
+      setStep("age");
     };
     document.head.appendChild(script);
 
+    // Timeout: if reCAPTCHA doesn't respond in 12 seconds, fall back to age verification
+    timeoutRef.current = setTimeout(() => {
+      if (!hasTriggered.current) {
+        console.warn("[Kickvora] reCAPTCHA timed out. Falling back to age verification.");
+        setStep("age");
+      }
+    }, 12000);
+
     return () => {
-      // Don't remove — keep for the session
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, [step]);
 
   // Auto-trigger reCAPTCHA as soon as it's ready
   useEffect(() => {
-    if (recaptchaReady && step === "recaptcha" && !verifying) {
+    if (recaptchaReady && step === "recaptcha" && !verifying && !hasTriggered.current) {
+      hasTriggered.current = true;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       handleRecaptcha();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -90,14 +121,15 @@ export default function VerificationGate({ children }: { children: React.ReactNo
       const data = await res.json();
 
       if (data.success) {
-        // Step 1 passed — move to age verification
         setStep("age");
       } else {
-        setError("Verification failed. Please try again.");
+        setError("Security verification failed. Please try again.");
+        setBlockReason("error");
         setStep("blocked");
       }
     } catch {
-      setError("Network error. Please refresh the page.");
+      setError("A network error occurred. Please check your connection and try again.");
+      setBlockReason("network");
       setStep("blocked");
     } finally {
       setVerifying(false);
@@ -120,30 +152,39 @@ export default function VerificationGate({ children }: { children: React.ReactNo
       if (data.success) {
         setStep("done");
       } else {
-        setError("Session error. Please refresh the page.");
+        setError("Session error. Please refresh the page and try again.");
+        setBlockReason("error");
+        setStep("blocked");
       }
     } catch {
-      setError("Network error. Please refresh the page.");
+      setError("A network error occurred. Please check your connection and try again.");
+      setBlockReason("network");
+      setStep("blocked");
     } finally {
       setVerifying(false);
     }
   };
 
   const handleAgeDecline = () => {
+    setBlockReason("age");
     setStep("blocked");
     setError("You must be 18 or older to access this platform.");
   };
 
   const handleRetry = () => {
     setError(null);
-    setStep("recaptcha");
+    setBlockReason(null);
     setRecaptchaReady(false);
+    hasTriggered.current = false;
+    setStep("recaptcha");
   };
 
   // Site is verified — render children normally
   if (step === "done") {
     return <>{children}</>;
   }
+
+  const canRetry = blockReason === "error" || blockReason === "network" || blockReason === "script";
 
   return (
     <>
@@ -414,23 +455,39 @@ export default function VerificationGate({ children }: { children: React.ReactNo
             <div>
               <div
                 style={{
-                  background: "#fef2f2",
-                  border: "1px solid #fecaca",
+                  background: blockReason === "age" ? "#fef2f2" : "#fff7ed",
+                  border: `1px solid ${blockReason === "age" ? "#fecaca" : "#fed7aa"}`,
                   borderRadius: "10px",
                   padding: "1.25rem",
                   marginBottom: "1.25rem",
                 }}
               >
-                <p style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>🚫</p>
-                <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#991b1b", marginBottom: "0.375rem" }}>
-                  Access Denied
+                <p style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>
+                  {blockReason === "age" ? "🚫" : "⚠️"}
                 </p>
-                <p style={{ fontSize: "0.8rem", color: "#b91c1c", lineHeight: "1.5" }}>
+                <p
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                    color: blockReason === "age" ? "#991b1b" : "#92400e",
+                    marginBottom: "0.375rem",
+                  }}
+                >
+                  {blockReason === "age" ? "Access Restricted" : "Verification Error"}
+                </p>
+                <p
+                  style={{
+                    fontSize: "0.8rem",
+                    color: blockReason === "age" ? "#b91c1c" : "#b45309",
+                    lineHeight: "1.5",
+                  }}
+                >
                   {error || "You do not meet the requirements to access this platform."}
                 </p>
               </div>
 
-              {error && error.includes("Verification failed") && (
+              {/* Show retry button for all non-age blocks */}
+              {canRetry && (
                 <button
                   onClick={handleRetry}
                   style={{
@@ -443,19 +500,19 @@ export default function VerificationGate({ children }: { children: React.ReactNo
                     fontWeight: 600,
                     cursor: "pointer",
                     width: "100%",
+                    marginBottom: "0.5rem",
                   }}
                 >
                   Try Again
                 </button>
               )}
-            </div>
-          )}
 
-          {/* Error message */}
-          {error && step !== "blocked" && (
-            <p style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.75rem" }}>
-              {error}
-            </p>
+              {blockReason === "network" && (
+                <p style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "0.5rem" }}>
+                  If this error persists, please check your internet connection or try disabling any ad-blockers.
+                </p>
+              )}
+            </div>
           )}
 
           {/* reCAPTCHA branding (required by Google ToS) */}
